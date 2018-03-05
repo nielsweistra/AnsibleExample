@@ -1,0 +1,49 @@
+- name: Obtain information about a file
+  win_stat:
+    path: C:\Temp\ansible\download
+  register: ansibledownload
+
+- name: Create ansible download folder
+  win_file:
+    path: C:\Temp\ansible\download
+    state: directory
+    when: ansibledownload.win_stat.exists == false
+
+- name: Install the Visual C thingy
+  win_package:
+    path: http://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe
+    product_id: '{CF2BEA3C-26EA-32F8-AA9B-331F7E34BA97}'
+    arguments: /install /passive /norestart
+
+- name: Install Remote Desktop Connection Manager from msi
+  win_package:
+    path: https://download.microsoft.com/download/A/F/0/AF0071F3-B198-4A35-AA90-C68D103BDCCF/rdcman.msi
+    product_id: '{0240359E-6A4C-4884-9E94-B397A02D893C}'
+    state: present
+
+- name: Check if notepad++ is installed
+  win_stat:
+    path: C:\Program Files (x86)\Notepad++\notepad++.exe
+  register: notepad
+
+#- debug: var=notepad
+
+- name: Download Install Notepadpp
+  win_get_url:
+    force: no
+    url: https://notepad-plus-plus.org/repository/7.x/7.5.5/npp.7.5.5.Installer.exe
+    dest: c:\Temp\ansible\download\npp.7.5.5.Installer.exe
+  when: notepad.stat.exists == False
+
+- name: Run Notepadpp Installer
+  win_command: c:\Temp\ansible\download\npp.7.5.5.Installer.exe /S
+  when: notepad.stat.exists == False
+
+- name: Install VSCode
+  win_chocolatey:
+    name: visualstudiocode
+    state: present
+
+- name: Change power plan to high performance
+  win_power_plan:
+    name: high performance

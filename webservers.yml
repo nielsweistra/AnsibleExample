@@ -1,0 +1,6 @@
+- hosts: webservers
+  #strategy: debug
+  roles:
+    - role: win-iis
+      iis_site_name: 'Default Web Site'
+      iis_site_state: stopped
