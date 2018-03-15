@@ -1,0 +1,4 @@
+- hosts: vsts-agents
+  #strategy: debug
+  roles:
+    

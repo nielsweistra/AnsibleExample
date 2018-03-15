@@ -1,2 +1,5 @@
 [webservers]
 10.99.99.10
+
+[vsts-agents]
+10.99.99.10
