@@ -5,7 +5,10 @@ $DownloadPath = "$($env:APPDATA)\$($Filename)"
 $InstallPath = "c:\vsts-agent"
 
 function Install-VSTSAgent {
-    mkdir -Path $InstallPath
+    Write-Host "Create install folder"
+    New-Item -ItemType directory -Path $InstallPath | Out-Null
+
+    Write-Host "Unpack $($Filename) to $($InstallPath) " 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory("$DownloadPath", "$InstallPath")
 }
@@ -28,12 +31,13 @@ function Test-VSTSAgentExists {
 
     if (Test-Path $agentConfigFile) {
         $Agent = Get-Content -Path $agentConfigFile | ConvertFrom-Json
-        Write-Host " ------------------------------------------------ "
-        Write-Host "|VSTS-Agent is already configured in this machine|"
-        Write-Host " ------------------------------------------------ "
-        Write-Host "    AgentName       : $($Agent.agentName)         "
-        Write-Host "    AgentID         : $($Agent.agentId)           "
-        Write-Host "    AgentServerUrl  : $($Agent.serverUrl)         "
+        Write-Host " -------------------------------------------------- "
+        Write-Host "| VSTS-Agent is already configured in this machine |"
+        Write-Host " -------------------------------------------------- "
+        Write-Host "|    AgentName       : $($Agent.agentName)         |"
+        Write-Host "|    AgentID         : $($Agent.agentId)           |"
+        Write-Host "|    AgentServerUrl  : $($Agent.serverUrl)         |"
+        Write-Host " -------------------------------------------------- "
     }
 }
 
