@@ -1,22 +1,24 @@
-$LatestRelease = Invoke-WebRequest -Uri https://api.github.com/repos/Microsoft/vsts-agent/releases/latest|ConvertFrom-Json
+
 $Filename = "vsts_agent_$($LatestRelease.tag_name).zip"
 $DownloadPath = "$($env:APPDATA)\$($Filename)"
 
 $InstallPath = "c:\vsts-agent"
 
-function Install-VSTSAgent{
+function Install-VSTSAgent {
     mkdir -Path $InstallPath
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory("$DownloadPath", "$InstallPath")
 }
 
-function Get-VSTSAgent{
-    Write-Host "Download version ($($LatestRelease.tag_name)) of VSTS-Agent"
-    Invoke-WebRequest $LatestRelease.zipball_url -OutFile $DownloadPath
+function Get-VSTSAgent {
+    $regex = '\b(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])'
+    $LatestRelease = Invoke-WebRequest -Uri https://api.github.com/repos/Microsoft/vsts-agent/releases/latest|ConvertFrom-Json
+    $ReleaseArtifacts = Select-String -Pattern $regex -input $LatestRelease.body -AllMatches | ForEach-Object {$_.matches} 
+    Write-Host "Download version $($LatestRelease.tag_name) of VSTS-Agent from $($ReleaseArtifacts[0].Value)"
+    Invoke-WebRequest $ReleaseArtifacts[0].Value -OutFile $DownloadPath
 }
 
-function Test-VSTSAgentExists
-{
+function Test-VSTSAgentExists {
     [CmdletBinding()]
     param(
         [string] $InstallPath
@@ -24,8 +26,7 @@ function Test-VSTSAgentExists
     
     $agentConfigFile = Join-Path $InstallPath '.agent'
 
-    if (Test-Path $agentConfigFile)
-    {
+    if (Test-Path $agentConfigFile) {
         $Agent = Get-Content -Path $agentConfigFile | ConvertFrom-Json
         Write-Host " ------------------------------------------------ "
         Write-Host "|VSTS-Agent is already configured in this machine|"
@@ -36,21 +37,20 @@ function Test-VSTSAgentExists
     }
 }
 
-If(!(Test-Path -Path $DownloadPath )){
+If (!(Test-Path -Path $DownloadPath )) {
     Get-VSTSAgent    
 }
 
-If(!(Test-Path -Path $InstallPath)){
+If (!(Test-Path -Path $InstallPath)) {
     Install-VSTSAgent
 }
 else {
     $agentConfigFile = Join-Path $InstallPath '.agent'
     Write-Host "Agent already installed"
-    if (!(Test-Path $agentConfigFile))
-    {
+    if (!(Test-Path $agentConfigFile)) {
         Write-Host "Agent is not configured"
     }
-    Else{
+    Else {
         Test-VSTSAgentExists -InstallPath $InstallPath
     }
     
